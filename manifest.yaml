@@ -1,0 +1,20 @@
+---
+applications:
+  # ============================================================================
+  # 1. EHR MCP Server (Backend Data Provider)
+  # ============================================================================
+  - name: ehr-mcp-server
+    path: ./target/ehr-mcp-server-1.0.0.jar
+    buildpacks:
+      - java_buildpack_offline
+    memory: 1G
+    instances: 1
+    routes:
+      - route: ehr-mcp-server.apps.internal
+    services:
+      - ehr-postgres-db
+    env:
+      SPRING_PROFILES_ACTIVE: tanzu
+      JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 17.+ } }'
+      SPRING_AI_MCP_SERVER_TYPE: SYNC
+      SPRING_AI_MCP_SERVER_SSE_ENDPOINT: /sse
