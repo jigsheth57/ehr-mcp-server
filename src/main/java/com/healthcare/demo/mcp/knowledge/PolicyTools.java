@@ -20,9 +20,23 @@ public class PolicyTools {
 
   @Tool(
       description =
-          "Retrieve current authorized demonstration policy passages using real local embeddings"
+          "Retrieve current authorized demonstration policy passages using configured embeddings"
               + " and keyword search. Returns sources and supported demo candidate identifiers.")
   public PolicySearch searchPolicies(String patientId, String query) {
+    Integer incompatible =
+        jdbc.queryForObject(
+            "SELECT count(*) FROM knowledge.document WHERE scope='demo' AND"
+                + " effective_from<=CURRENT_DATE AND (effective_to IS NULL OR"
+                + " effective_to>=CURRENT_DATE) AND (embedding IS NULL OR embedding_model IS"
+                + " DISTINCT FROM ? OR embedding_identity IS DISTINCT FROM ? OR"
+                + " embedding_preprocessing IS DISTINCT FROM ?)",
+            Integer.class,
+            embeddings.model(),
+            embeddings.identity(),
+            embeddings.preprocessing());
+    if (incompatible != null && incompatible > 0)
+      throw new IllegalStateException(
+          "Policy index identity or preprocessing mismatch; run the explicit reindex release task");
     String vector = Json.write(embeddings.embed("search_query: " + query));
     String sql =
         """
@@ -30,7 +44,7 @@ WITH eligible AS (
     SELECT * FROM knowledge.document
     WHERE scope='demo' AND effective_from<=CURRENT_DATE
     AND (effective_to IS NULL OR effective_to>=CURRENT_DATE)
-    AND embedding IS NOT NULL AND embedding_model=?
+    AND embedding IS NOT NULL AND embedding_model=? AND embedding_identity=? AND embedding_preprocessing=?
 ), semantic AS (
     SELECT id,row_number() OVER(ORDER BY embedding <=> CAST(? AS vector)) AS rank FROM eligible
 ), lexical AS (
@@ -53,6 +67,8 @@ WHERE s.rank<=5 OR l.rank<=5 ORDER BY score DESC LIMIT 5
                     rs.getString("body"),
                     List.of(Json.read(rs.getString("candidates"), String[].class))),
             embeddings.model(),
+            embeddings.identity(),
+            embeddings.preprocessing(),
             vector,
             query,
             query);

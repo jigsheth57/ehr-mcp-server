@@ -42,6 +42,7 @@ public class CareTools {
         jdbc.queryForList(
             "SELECT label FROM operations.followup_slot WHERE available=true ORDER BY id",
             String.class);
-    return new CareOptions(coverage.get(0), alternatives, slots, "synthetic-formulary-v1");
+    return new CareOptions(
+        coverage.get(0), alternatives, slots, "synthetic-formulary-v1", plans.get(0));
   }
 }

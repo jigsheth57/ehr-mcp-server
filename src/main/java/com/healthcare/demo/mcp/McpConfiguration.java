@@ -11,6 +11,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.*;
 
 @Configuration
+@Import({ProviderConfiguration.class, ObservationConfiguration.class})
 public class McpConfiguration {
   @Bean
   ToolCallbackProvider hospitalTools(EhrTools ehr, PolicyTools policies, CareTools care) {

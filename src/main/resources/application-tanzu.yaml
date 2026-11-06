@@ -1,5 +1,13 @@
-# Deployment must supply a private bind address, database credentials and task secret.
-# No profile runs SQL reset scripts or assumes a cloud model binding.
+# Single-instance CF template. Explicit bindings are validated before application startup.
 server:
   address: 0.0.0.0
   port: ${PORT:8080}
+spring:
+  flyway:
+    enabled: false
+  ai:
+    model:
+      chat: none
+      embedding: none
+demo:
+  provider: openai

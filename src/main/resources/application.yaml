@@ -14,6 +14,13 @@ spring:
     init:
       mode: never
   ai:
+    model:
+      chat: none
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://127.0.0.1:11434}
+      embedding:
+        options:
+          model: ${DEMO_EMBEDDING_MODEL:nomic-embed-text}
     mcp:
       server:
         name: synthetic-hospital-tools
@@ -23,6 +30,31 @@ spring:
         streamable-http:
           mcp-endpoint: /mcp
 demo:
+  execution:
+    review-workers: 2
+    review-queue: 16
+    consultation-workers: 4
+    consultation-queue: 32
+    stream-workers: 16
+    connect-timeout: 3s
+    read-timeout: 8s
   token-secret: ${DEMO_TOKEN_SECRET}
   ollama-url: ${OLLAMA_BASE_URL:http://127.0.0.1:11434}
   embedding-model: ${DEMO_EMBEDDING_MODEL:nomic-embed-text}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db
+  tracing:
+    sampling:
+      probability: 1.0
