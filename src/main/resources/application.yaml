@@ -1,30 +1,60 @@
 server:
-  port: 8081
-
+  address: 127.0.0.1
+  port: ${PORT:8081}
 spring:
   application:
     name: ehr-mcp-server
   datasource:
-    url: jdbc:postgresql://localhost:5432/ehr_db
-    username: myappuser
-    password: mypassword
-    driver-class-name: org.postgresql.Driver
+    url: ${DEMO_DB_URL:jdbc:postgresql://127.0.0.1:55432/clinical_triage_demo}
+    username: ${DEMO_DB_USER:clinical_demo}
+    password: ${DEMO_DB_PASSWORD}
+  flyway:
+    locations: classpath:db/demo
   sql:
     init:
-      mode: always
-      schema-locations: classpath:schema.sql
-      data-locations: classpath:data.sql
-  jpa:
-    hibernate:
-      ddl-auto: none
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+      mode: never
   ai:
+    model:
+      chat: none
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://127.0.0.1:11434}
+      embedding:
+        options:
+          model: ${DEMO_EMBEDDING_MODEL:nomic-embed-text}
     mcp:
       server:
-        name: hospital-ehr-mcp-server
+        name: synthetic-hospital-tools
         version: 1.0.0
         type: SYNC
-        sse-endpoint: /sse
+        protocol: STREAMABLE
+        streamable-http:
+          mcp-endpoint: /mcp
+demo:
+  execution:
+    review-workers: 2
+    review-queue: 16
+    consultation-workers: 4
+    consultation-queue: 32
+    stream-workers: 16
+    connect-timeout: 3s
+    read-timeout: 8s
+  token-secret: ${DEMO_TOKEN_SECRET}
+  ollama-url: ${OLLAMA_BASE_URL:http://127.0.0.1:11434}
+  embedding-model: ${DEMO_EMBEDDING_MODEL:nomic-embed-text}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db
+  tracing:
+    sampling:
+      probability: 1.0

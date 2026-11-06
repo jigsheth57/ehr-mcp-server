@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class EhrMcpServerApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(EhrMcpServerApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(EhrMcpServerApplication.class, args);
+  }
 }
